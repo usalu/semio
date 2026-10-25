@@ -22893,3 +22893,39 @@ func TestLocCommand(t *testing.T) {
 		}
 	})
 }
+
+func TestWorktreePrefix(t *testing.T) {
+	if got := DefaultWorktreePrefix("windows"); got != `C:\git\semio.worktrees` {
+		t.Fatalf("windows prefix = %q", got)
+	}
+	if got := WorktreePrefix("windows", `D:\wt`); got != `D:\wt` {
+		t.Fatalf("configured prefix = %q", got)
+	}
+	if windowsPathUnits("🎫") != 2 {
+		t.Fatalf("emoji units = %d", windowsPathUnits("🎫"))
+	}
+	longLeaf := "FIX-WINDOWS-NATIVE-DEV-AND-BUILD-FLOWS-REPO-MCP-AND-AGENT-HOOKS-SKETCHPAD-DESKTOP-CODA-DESKTOP-AND-SEMIO-GRASSHOPPER-REMOVE-UNIX-ONLY-COMMAND-ASSUMPTIONS-AND-VALIDATE-MONOREPO-COMMANDS-ON-WINDOWS"
+	longRel := ticketTrackedRel(26, 4, 9, longLeaf, "ticket.json")
+	if windowsCheckoutFits(windowsWorktreePrefix, longRel) {
+		t.Fatal("long ticket path must exceed the windows checkout budget")
+	}
+	shortRel := ticketTrackedRel(26, 4, 9, "FIX-WINDOWS-NATIVE-DEV", "ticket.json")
+	if !windowsCheckoutFits(windowsWorktreePrefix, shortRel) {
+		t.Fatal("short ticket path must fit under C:\\git\\semio.worktrees")
+	}
+	fitted := limitTicketLeaf(longLeaf)
+	if len(fitted) > maxTicketLeafSlug {
+		t.Fatalf("fitted leaf len = %d", len(fitted))
+	}
+	if !windowsCheckoutFits(windowsWorktreePrefix, ticketTrackedRel(26, 4, 9, fitted, "ticket.json")) {
+		t.Fatalf("fitted path still overflows: %s", fitted)
+	}
+	root, _ := NewRootWithConfig(testEngineFactory)
+	gitCmd, _, err := root.Find([]string{"git", "semio.worktrees", "prefix"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gitCmd.Name() != "prefix" {
+		t.Fatalf("command = %s", gitCmd.Name())
+	}
+}

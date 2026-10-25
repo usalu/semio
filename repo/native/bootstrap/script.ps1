@@ -257,6 +257,27 @@ function Install-EditorExtensions {
     }
 }
 
+function Configure-WorktreePrefix {
+    param([string]$RepoRoot)
+
+    $prefix = "C:\git\semio.worktrees"
+    Ensure-Directory -Path $prefix
+    Push-Location $RepoRoot
+    try {
+        & git config --local core.longpaths true
+        if ($LASTEXITCODE -ne 0) {
+            throw "git config core.longpaths failed"
+        }
+        & git config --local semio.worktrees.prefix $prefix
+        if ($LASTEXITCODE -ne 0) {
+            throw "git config semio.worktrees.prefix failed"
+        }
+    } finally {
+        Pop-Location
+    }
+    Write-Step "Worktree prefix is $prefix."
+}
+
 function Configure-GitSafeDirectories {
     param([string]$RepoRoot)
 
@@ -861,6 +882,7 @@ if (-not $SkipRepoBootstrap) {
     $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
     Configure-GitSafeDirectories -RepoRoot $repoRoot
+    Configure-WorktreePrefix -RepoRoot $repoRoot
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("install") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
