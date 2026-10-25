@@ -99,8 +99,20 @@ export class SetupScript extends Script {
     runCmd("bun", ["add", "--no-save", `${platformPkg}@${version}`], { cwd: this.root });
   }
 
+  private worktreePrefix(): string {
+    if (process.platform === "win32") return "C:\\git\\semio.worktrees";
+    const documents = join(homedir(), "Documents", "semio.worktrees");
+    if (existsSync(documents)) return documents;
+    return join(homedir(), "semio.worktrees");
+  }
+
   private runGit(): void {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
+    if (process.platform === "win32") {
+      mkdirSync("C:\\git\\semio.worktrees", { recursive: true });
+      runCmd("git", ["config", "--local", "core.longpaths", "true"], { cwd: this.root });
+    }
+    runCmd("git", ["config", "--local", "semio.worktrees.prefix", this.worktreePrefix()], { cwd: this.root });
     const repoClientCandidates = [join(this.root, "repo", "client", "client.exe"), join(this.root, "repo", "client", "client")];
     const repoClientPath = repoClientCandidates.find((p) => existsSync(p));
     if (repoClientPath) {

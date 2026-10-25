@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/blevesearch/bleve/v2"
+	blevequery "github.com/blevesearch/bleve/v2/search/query"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
@@ -33,12 +34,15 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/cobra"
+	repopkg "github.com/usalu/semio/repo/go"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"math"
 	"math/rand"
+	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"os/exec"
@@ -53,17 +57,10 @@ import (
 	"text/template"
 	"time"
 	"unicode/utf8"
-	_ "modernc.org/sqlite"
-	blevequery "github.com/blevesearch/bleve/v2/search/query"
-	ignore "github.com/sabhiram/go-gitignore"
-	repopkg "github.com/usalu/semio/repo/go"
 )
-
-
 
 // #region 🤸Preamble
 // Package declaration and dependency imports for the repo CLI.
-
 
 // #region 🔌Adapters
 // #endregion 🔌Adapters
@@ -712,6 +709,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(analyzeCommand(factory, &config))
 	root.AddCommand(entityEmojisCommand(&config))
 	root.AddCommand(configureCommand(factory, &config))
+	root.AddCommand(gitCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(updateCmd)
 	root.AddCommand(authCommand(&config))
@@ -21980,6 +21978,10 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if parentDir != "." {
 		slug = filepath.ToSlash(filepath.Join(parentDir, slug))
 	}
+	slug = limitTicketLeaf(slug)
+	if windowsPathUnits(ticketTrackedRel(ticket.Year, ticket.Month, ticket.Day, slug, "ticket.json")) > maxRepoRelativePathUnits {
+		return fmt.Errorf("ticket path exceeds the Windows checkout budget")
+	}
 
 	newFolderPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	if slug != ticket.Slug {
@@ -22086,6 +22088,10 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 		month = pTicket.Month
 		day = pTicket.Day
 		slug = filepath.ToSlash(filepath.Join(pTicket.Slug, slug))
+	}
+	slug = limitTicketLeaf(slug)
+	if windowsPathUnits(ticketTrackedRel(year, month, day, slug, "ticket.json")) > maxRepoRelativePathUnits {
+		return nil, fmt.Errorf("ticket path exceeds the Windows checkout budget")
 	}
 
 	var llmSlug string
@@ -38534,6 +38540,165 @@ func removeGitHooks(repoRoot string) ([]string, error) {
 	return removed, nil
 }
 
+// #region 🌳Worktree Prefix
+// Windows checkout budget for `C:\git\semio.worktrees\<worktree>\<repo path>`.
+
+const windowsWorktreePrefix = `C:\git\semio.worktrees`
+const worktreePrefixConfigKey = "semio.worktrees.prefix"
+const windowsMaxPath = 259
+const reservedWorktreeNameUnits = 32
+const maxRepoRelativePathUnits = 160
+const maxTicketLeafSlug = 64
+
+// 🌳windowsPathUnits counts UTF-16 code units the way Win32 MAX_PATH does.
+func windowsPathUnits(path string) int {
+	n := 0
+	for _, r := range path {
+		if r > 0xFFFF {
+			n += 2
+			continue
+		}
+		n++
+	}
+	return n
+}
+
+// 🌳DefaultWorktreePrefix is the checkout root when git config is unset.
+func DefaultWorktreePrefix(goos string) string {
+	if goos == "windows" {
+		return windowsWorktreePrefix
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "semio.worktrees"
+	}
+	documents := filepath.Join(home, "Documents", "semio.worktrees")
+	if info, statErr := os.Stat(documents); statErr == nil && info.IsDir() {
+		return documents
+	}
+	return filepath.Join(home, "semio.worktrees")
+}
+
+// 🌳WorktreePrefix prefers an explicit git config value over the platform default.
+func WorktreePrefix(goos, configured string) string {
+	configured = strings.TrimSpace(configured)
+	if configured != "" {
+		return configured
+	}
+	return DefaultWorktreePrefix(goos)
+}
+
+// 🎫ticketTrackedRel is the repo-relative path of a file inside a ticket folder.
+func ticketTrackedRel(year, month, day int, slug, name string) string {
+	return ".repo/🎫/" + PadNumber(year, 2) + "/" + PadNumber(month, 2) + "/" + PadNumber(day, 2) + "/" + slug + "/" + name
+}
+
+// ✂️limitTicketLeaf keeps a ticket directory name inside the Windows path budget.
+func limitTicketLeaf(slug string) string {
+	slug = strings.Trim(strings.TrimSpace(slug), "/")
+	parts := strings.Split(slug, "/")
+	leaf := parts[len(parts)-1]
+	if len(leaf) <= maxTicketLeafSlug {
+		return slug
+	}
+	sum := sha256.Sum256([]byte(leaf))
+	suffix := hex.EncodeToString(sum[:3])
+	keep := maxTicketLeafSlug - len(suffix) - 1
+	trimmed := strings.TrimRight(leaf[:keep], "-")
+	if len(trimmed) < 12 {
+		trimmed = leaf[:keep]
+	}
+	parts[len(parts)-1] = trimmed + "-" + suffix
+	return strings.Join(parts, "/")
+}
+
+// 🪟windowsCheckoutFits reports whether a repo-relative path fits under the worktree prefix.
+func windowsCheckoutFits(prefix, rel string) bool {
+	worktree := strings.Repeat("n", reservedWorktreeNameUnits)
+	full := strings.TrimRight(prefix, `\/`) + `\` + worktree + `\` + strings.ReplaceAll(rel, "/", `\`)
+	return windowsPathUnits(full) <= windowsMaxPath
+}
+
+func readWorktreePrefixConfig(repoRoot string) string {
+	stdout, _, exitCode := ExecCommand("git", []string{"config", "--get", worktreePrefixConfigKey}, repoRoot)
+	if exitCode != 0 {
+		return ""
+	}
+	return strings.TrimSpace(stdout)
+}
+
+func windowsCheckoutOverflows(repoRoot, prefix string) ([]string, error) {
+	stdout, stderr, exitCode := ExecCommand("git", []string{"ls-files", "-z"}, repoRoot)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git ls-files failed: %s", strings.TrimSpace(stderr))
+	}
+	var overflows []string
+	for _, rel := range strings.Split(stdout, "\x00") {
+		if rel == "" {
+			continue
+		}
+		if !windowsCheckoutFits(prefix, rel) {
+			overflows = append(overflows, rel)
+		}
+	}
+	sort.Slice(overflows, func(i, j int) bool {
+		return windowsPathUnits(overflows[i]) > windowsPathUnits(overflows[j])
+	})
+	return overflows, nil
+}
+
+// 🆕gitCommand creates `git semio.worktrees prefix`.
+func gitCommand(_ EngineFactory, config *Config) *cobra.Command {
+	git := &cobra.Command{
+		Use:   "git",
+		Short: "Git workspace settings",
+	}
+	worktrees := &cobra.Command{
+		Use:   "semio.worktrees",
+		Short: "Worktree location",
+	}
+	prefix := &cobra.Command{
+		Use:   "prefix [path]",
+		Short: "Print or set the worktree directory prefix",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				repoRoot = findRepoRoot(cwd)
+			}
+			if len(args) == 1 {
+				_, stderr, exitCode := ExecCommand("git", []string{"config", "--local", worktreePrefixConfigKey, args[0]}, repoRoot)
+				if exitCode != 0 {
+					return fmt.Errorf("git config %s failed: %s", worktreePrefixConfigKey, strings.TrimSpace(stderr))
+				}
+			}
+			prefix := WorktreePrefix(runtime.GOOS, readWorktreePrefixConfig(repoRoot))
+			fmt.Fprintln(cmd.OutOrStdout(), prefix)
+			checkPrefix := windowsWorktreePrefix
+			if runtime.GOOS == "windows" {
+				checkPrefix = prefix
+			}
+			overflows, err := windowsCheckoutOverflows(repoRoot, checkPrefix)
+			if err != nil {
+				return err
+			}
+			if len(overflows) > 0 {
+				return fmt.Errorf("windows checkout under %s exceeds MAX_PATH for %d path(s), longest %s", checkPrefix, len(overflows), overflows[0])
+			}
+			return nil
+		},
+	}
+	worktrees.AddCommand(prefix)
+	git.AddCommand(worktrees)
+	return git
+}
+
+// #endregion 🌳Worktree Prefix
+
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -45103,11 +45268,8 @@ func searchLinesInFile(filePath string, pattern string) []int {
 
 // #region 🔖Missing Hook Functions
 
-
 // #region 🤸Preamble
 // Package client — MCP + hook helpers shared by repo/client/mcp and repo/client/mcp/{cursor,kiro,...}.
-
-
 
 // #endregion 🤸Preamble
 
@@ -45394,36 +45556,36 @@ func mcpDesc(kind McpClientKind, key string) string {
 // mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
 var mcpDescriptionTable = map[string]map[McpClientKind]string{
 	"prompt_enhance": {
-		McpClientGeneric:  "Use when you are about to add behavior and must align the change with repository rules before editing.",
-		McpClientCursor:   "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientKiro:     "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientCopilot:  "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientClaude:   "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
-		McpClientCodex:    "Use when Codex is about to add behavior and must align the change with repository rules before editing.",
+		McpClientGeneric: "Use when you are about to add behavior and must align the change with repository rules before editing.",
+		McpClientCursor:  "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientKiro:    "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCopilot: "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientClaude:  "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCodex:   "Use when Codex is about to add behavior and must align the change with repository rules before editing.",
 	},
 	"prompt_refactor": {
-		McpClientGeneric:  "Use when a refactor is required and you must not regress behavior or tests.",
-		McpClientCursor:   "Use when the Cursor agent must refactor without regressing behavior or tests.",
-		McpClientKiro:     "Use when the Kiro agent must refactor without regressing behavior or tests.",
-		McpClientCopilot:  "Use when the Copilot agent must refactor without regressing behavior or tests.",
-		McpClientClaude:   "Use when Claude Code must refactor without regressing behavior or tests.",
-		McpClientCodex:    "Use when Codex must refactor without regressing behavior or tests.",
+		McpClientGeneric: "Use when a refactor is required and you must not regress behavior or tests.",
+		McpClientCursor:  "Use when the Cursor agent must refactor without regressing behavior or tests.",
+		McpClientKiro:    "Use when the Kiro agent must refactor without regressing behavior or tests.",
+		McpClientCopilot: "Use when the Copilot agent must refactor without regressing behavior or tests.",
+		McpClientClaude:  "Use when Claude Code must refactor without regressing behavior or tests.",
+		McpClientCodex:   "Use when Codex must refactor without regressing behavior or tests.",
 	},
 	"prompt_test": {
-		McpClientGeneric:  "Use when tests must be extended before you claim coverage for new paths.",
-		McpClientCursor:   "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
-		McpClientKiro:     "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
-		McpClientCopilot:  "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
-		McpClientClaude:   "Use when Claude Code must extend tests before claiming coverage for new paths.",
-		McpClientCodex:    "Use when Codex must extend tests before claiming coverage for new paths.",
+		McpClientGeneric: "Use when tests must be extended before you claim coverage for new paths.",
+		McpClientCursor:  "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
+		McpClientKiro:    "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
+		McpClientCopilot: "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
+		McpClientClaude:  "Use when Claude Code must extend tests before claiming coverage for new paths.",
+		McpClientCodex:   "Use when Codex must extend tests before claiming coverage for new paths.",
 	},
 	"prompt_comply": {
-		McpClientGeneric:  "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
-		McpClientCursor:   "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientKiro:     "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientCopilot:  "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientClaude:   "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
-		McpClientCodex:    "Use when Codex must converge a red workspace to passing tests without deleting assertions.",
+		McpClientGeneric: "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
+		McpClientCursor:  "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientKiro:    "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCopilot: "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientClaude:  "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCodex:   "Use when Codex must converge a red workspace to passing tests without deleting assertions.",
 	},
 	"res_root": {
 		McpClientGeneric: "Fetch when the session anchor for the repository root is required before any scoped read.",
@@ -45610,28 +45772,28 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientCodex:   "Fetch when Codex must read one checkpoint record before tying hooks or tickets to history.",
 	},
 	"tool_ticket_open": {
-		McpClientGeneric:  "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
-		McpClientCursor:   "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
-		McpClientKiro:     "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
-		McpClientCopilot:  "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
-		McpClientClaude:   "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
-		McpClientCodex:    "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
+		McpClientGeneric: "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
+		McpClientCursor:  "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientKiro:    "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
+		McpClientCopilot: "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
+		McpClientClaude:  "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientCodex:   "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
 	},
 	"tool_ticket_close": {
-		McpClientGeneric:  "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
-		McpClientCursor:   "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientKiro:     "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
-		McpClientCopilot:  "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
-		McpClientClaude:   "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientCodex:    "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
+		McpClientGeneric: "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
+		McpClientCursor:  "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientKiro:    "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
+		McpClientCopilot: "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
+		McpClientClaude:  "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientCodex:   "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
 	},
 	"tool_ticket_reopen": {
-		McpClientGeneric:  "Use when work must continue on a closed ticket before any new edits land.",
-		McpClientCursor:   "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
-		McpClientKiro:     "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
-		McpClientCopilot:  "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
-		McpClientClaude:   "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
-		McpClientCodex:    "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
+		McpClientGeneric: "Use when work must continue on a closed ticket before any new edits land.",
+		McpClientCursor:  "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientKiro:    "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
+		McpClientCopilot: "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
+		McpClientClaude:  "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientCodex:   "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
 	},
 	"tool_section_move": {
 		McpClientGeneric: "Use when a region rename is required and the surrounding file context is already loaded.",
